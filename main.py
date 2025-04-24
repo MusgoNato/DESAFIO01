@@ -1,50 +1,11 @@
 import os
+import json
 from dotenv import load_dotenv
 from groq import Groq
 from telebot import TeleBot
 from resources.AbiosClient import AbiosClient
-
-
-# # Conexao com a api do telegram para o bot
-# bot = TeleBot(BOT_TOKEN)
-
-# # Historico da IA e sua configuração.
-# historico = [
-#     {
-#         "role": "system",
-#         "content": "Todas as respostas devem ser respondidas em português para o usuário",
-#     },
-# ]
-
-# # Controlador de mensagens
-# @bot.message_handler(func=lambda message: message.chat.id)
-# def handler_message(message):
-
-#     # Conexao com a api para uso de uma IA
-#     User = Groq(api_key=API_IA)
-    
-#     # Armazenando hostorico de mensagens
-#     userResponse = message.text.strip()
-#     historico.append({"role": "user", "content": userResponse})
-    
-#     # Criação do chat
-#     chat = User.chat.completions.create(
-#         messages=historico,
-#         model="llama-3.1-8b-instant",
-#         temperature=0,
-#         stream=False,
-#     )
-
-#     # Conteudo da resposta da IA formatada
-#     text_from_ia = chat.choices[0].message.content
-#     text_from_ia = text_from_ia.split("</think>")[-1].strip()
-#     historico.append({"role": "assistant", "content": text_from_ia})
-    
-#     # Bot respondendo
-#     bot.send_message(message.chat.id, text_from_ia)
-
-# # Roda o bot
-# bot.infinity_polling()
+from resources.JsonData import getJsonData
+from resources.TelegramClient import TelegramBotClient
 
 # Main
 if __name__ == "__main__":
@@ -60,9 +21,30 @@ if __name__ == "__main__":
     # Atribuição da url para consumo da API
     URL_API = os.getenv('URL_API')
 
-    client = AbiosClient(URL_API, API_KEY_PANDAS_SCORE)
-    response = client._request(method="GET", endpoint="matches")
-    print(response)
+    # # Retorno da requisição a API
+    # client = AbiosClient(URL_API, API_KEY_PANDAS_SCORE)
+    # response = client._request(method="GET", endpoint="matches")
+    # print(response)
 
+    # Retorno do arquivo json
+    data = getJsonData()
+    
+    # Retorna a autenticação do usuario no bot do telegram
+    client = TelegramBotClient(BOT_TOKEN) 
 
+    # Pego o bot (Para uso de keyboards, etc) 
+    bot = client.getBot()
 
+    ### Lembrete    
+        # Fix
+            # Fazer o message handler (Colocar uma mensagem padrao para replicar, com botões sobre os torneios que estao tendo, talvez fazer uma paginação ou algo do tipo)
+        # Exemplo de desenvolvimento:
+            # Criar uma classe que vai direcionar uma mensagem padrao, depois criar uma classe ou otras funções que irao captar o input do usuario e direcionar a saida da informação com base na API (no caso o data no formato json)
+            # Como o bot ja roda pelo client.startPolling, tratar os inputs do usuario em outros arquivos (classes/funções) não vai ser um problema 
+    
+    # Roda o bot
+    client.startPolling()
+
+    
+    
+    
