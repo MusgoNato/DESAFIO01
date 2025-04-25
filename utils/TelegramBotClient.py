@@ -2,7 +2,7 @@ from telebot import TeleBot
 from flask import Flask, request
 from telebot import types
 import os
-from utils.getGanhadores import getGanhadores, jsonForObjects
+from utils.getSeries import getSeries, jsonForObjects, getWinnerById
 
 # Dicionário global para armazenar torneios por chat_id
 TORNEIOS_POR_CHAT = {}
@@ -34,9 +34,15 @@ class TelegramBotClient:
 
     def _formatar_torneio(self, torneio):
         """Formata a mensagem de um torneio para exibição"""
-        mensagem = f"🏆 {torneio.nome} - {torneio.serie.temporada} {torneio.serie.ano}\n\n"
+        mensagem = f"🏆 *{torneio.nome}* - {torneio.serie.temporada if torneio.serie.temporada != None else 'A marcar'} {torneio.serie.ano}\n\n⚔️ *Partidas*:\n"
+
         for partida in torneio.partidas:
-            mensagem += f"{partida.nome} - {partida.status}\n"
+            vencedor = ""
+            if partida.vencedor:
+                timeVencedor = getWinnerById(self.api_key, partida.vencedor)
+                vencedor += f"🏁 **Time Vencedor:** {timeVencedor[0]['name']}" 
+            mensagem += f"{partida.nome} - {partida.status}{vencedor}\n"
+
         return mensagem
 
     def _criar_botoes_paginacao(self, index, total):
@@ -64,7 +70,7 @@ class TelegramBotClient:
 
             match action:
                 case "torneios":
-                    torneios = jsonForObjects(getGanhadores(self.api_key))
+                    torneios = jsonForObjects(getSeries(self.api_key))
                     if not torneios:
                         self.bot.send_message(call.message.chat.id, "Nenhum torneio encontrado.")
                         return
@@ -90,7 +96,7 @@ class TelegramBotClient:
             # Recupera os torneios do dicionário global
             torneios = TORNEIOS_POR_CHAT.get(chat_id, [])
             if not torneios or index >= len(torneios):
-                self.bot.send_message(chat_id, "Erro: torneio não encontrado.")
+                self.bot.send_message(chat_id, "Torneio não encontrado.")
                 return
 
             # Formata a mensagem do torneio atual
@@ -116,7 +122,18 @@ class TelegramBotClient:
     def _send_main_menu(self, chat_id):
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton('📢 Torneios Recentes', callback_data="menu_torneios"))
-        self.bot.send_message(chat_id, "Escolha uma opção:", reply_markup=markup)
+        
+        logo = "https://duckduckgo.com/i/c33076bb294fef17.png"
+        caption = (
+            "🔥 Bem-vindo à nação Fúria 🔥\n"
+            "👉 [Explore o universo Fúria no nosso site](https://furia.gg)\n"
+            "👉 [Junte-se à comunidade no Discord](https://discord.gg/furia)\n"
+            "👉 [Nos siga no Instagram](https://www.instagram.com/furiagg/)\n"
+            "Escolha um botão abaixo e bora pro próximo level furioso 🦾\n"
+        )
+
+        # Envio da logo da furia juntamente com uma mensagem personalizada e os botões
+        self.bot.send_photo(chat_id, logo, caption, parse_mode='Markdown', reply_markup=markup)
 
     def start(self):
         """Inicialização do bot ao webhook"""

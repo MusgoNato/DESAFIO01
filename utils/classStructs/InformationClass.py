@@ -10,7 +10,7 @@ class Torneio:
         self.partidas = partidas
 
 class Partida:
-    def __init__(self, id, nome, status, inicio, tipo, jogos, streams):
+    def __init__(self, id, nome, status, inicio, tipo, jogos, streams, vencedor):
         self.id = id
         self.nome = nome
         self.status = status
@@ -18,6 +18,7 @@ class Partida:
         self.tipo = tipo
         self.jogos = jogos
         self.streams = streams
+        self.vencedor = vencedor
 
 class Stream:
     def __init__(self, idioma, url):

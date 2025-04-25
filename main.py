@@ -5,7 +5,7 @@ from utils.JsonData import getJsonData
 from utils.TelegramBotClient import TelegramBotClient
 from utils.AbiosClient import AbiosClient 
 from utils.JsonData import getTorneios
-from utils.getGanhadores import getGanhadores, jsonForObjects 
+from utils.getSeries import getSeries, jsonForObjects 
 
 # Main
 if __name__ == "__main__":
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     # data = getJsonData()
 
     # Resposta da requisição a API
-    resposeganhadoresJson = getGanhadores(API_KEY_PANDAS_SCORE)
+    resposeganhadoresJson = getSeries(API_KEY_PANDAS_SCORE)
     data = jsonForObjects(resposeganhadoresJson)
     
 
