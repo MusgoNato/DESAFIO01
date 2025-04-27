@@ -1,4 +1,3 @@
-# services/webhook.py
 import os
 from quart import Quart, request
 from telebot.async_telebot import AsyncTeleBot
