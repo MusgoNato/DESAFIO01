@@ -4,10 +4,33 @@ from services.api_client import APIClient
 import time
 
 class PandaScoreClient(APIClient):
-    """Classe para inicialização da API PandaScore"""
+    """Cliente para interagir com a API PandaScore para dados de partidas de CS:GO/CS2.
+
+    Estende a classe APIClient para realizar requisições à API PandaScore, com suporte a
+    autenticação via chave de API e cache para otimizar chamadas frequentes. Projetada para
+    obter dados de partidas, como a última partida finalizada da FURIA (opponent_id: 124530).
+
+    Attributes:
+        base_url (str): URL base da API PandaScore para CS:GO/CS2
+            ('https://api.pandascore.co/csgo').
+        api_key (str): Chave de autenticação da API.
+        _cache (Dict[str, Dict]): Cache interno para armazenar respostas de requisições,
+            com dados e timestamp.
+        _cache_ttl (int): Tempo de vida do cache em segundos (default: 300).
+    """
     
     def __init__(self, api_key: str):
-        """Inicializa o cliente para a possivel autenticação com o Pandas Score"""
+        """Inicializa o cliente PandaScore com a chave de API.
+
+        Configura a URL base da API PandaScore para CS:GO/CS2 e inicializa o cache para
+        evitar requisições redundantes à API.
+
+        Args:
+            api_key (str): Chave de autenticação da API PandaScore.
+
+        Raises:
+            ValueError: Se a chave de API for vazia ou None.
+        """
         super().__init__("https://api.pandascore.co/csgo", api_key=api_key)
 
         # Cache para evitar multiplas requisições
@@ -15,7 +38,28 @@ class PandaScoreClient(APIClient):
         self._cache_ttl = 300
 
     async def get_Ultima_Partida(self):
-        """"Retorno de ultima partida realizada no CS GO"""
+        """Obtém os dados da última partida finalizada da FURIA em CS:GO.
+
+        Verifica se há dados válidos no cache (menos de 300 segundos). Se o cache estiver
+        válido, retorna os dados armazenados. Caso contrário, faz uma requisição à API
+        PandaScore para obter a última partida finalizada da FURIA (opponent_id: 124530),
+        armazena o resultado no cache e o retorna.
+
+        Returns:
+            list: Lista contendo um dicionário com os dados da última partida, incluindo
+                campos como 'opponents', 'results', 'winner', e 'streams_list'.
+
+        Raises:
+            Exception: Se a requisição à API falhar (ex.: erro HTTP, conexão, ou chave
+                inválida). A exceção é propagada do método _request da classe base.
+            ValueError: Se o opponent_id ou outros parâmetros forem inválidos.
+
+        Example:
+            >>> client = PandaScoreClient("sua-chave")
+            >>> partida = await client.get_Ultima_Partida()
+            >>> print(partida)
+            [{'opponents': [...], 'results': [...], 'winner': {...}, ...}]
+        """
         if time.time() - self._cache["ultima_partida"]["cache_timestamp"] < self._cache_ttl:
             print("Retornando dados em cache")
             return self._cache["ultima_partida"]["data"]
@@ -29,7 +73,8 @@ class PandaScoreClient(APIClient):
             params=
             {
                 "filter[status]": "finished",
-                "filter[opponent_id]": 124530,
+                
+                "filter[opponent_id]": 124530, # Id da Furia
                 "sort": "-begin_at",
                 "page[size]": 1
             }

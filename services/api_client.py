@@ -1,16 +1,61 @@
-# api_client.py (arquivo separado)
 import aiohttp
 from typing import Optional, Dict, Any, List
 
 class APIClient:
-    """Classe base para todas as requisições HTTP assíncronas"""
+    """Cliente base para requisições HTTP assíncronas a APIs externas.
+
+    Fornece uma interface genérica para realizar requisições HTTP (GET, POST, etc.) usando
+    aiohttp, com suporte a autenticação via chave de API e personalização de parâmetros e
+    cabeçalhos. Projetada para ser estendida por classes específicas, como clientes para a
+    API PandaScore.
+
+    Attributes:
+        base_url (str): URL base da API, sem barras finais.
+        api_key (str, optional): Chave de autenticação da API, usada em cabeçalhos
+            Authorization, se fornecida.
+    """
     
     def __init__(self, base_url: str, api_key: Optional[str] = None):
+        """Inicializa o cliente HTTP com a URL base e uma chave de API opcional.
+
+        Args:
+            base_url (str): URL base da API (ex.: 'https://api.pandascore.co').
+            api_key (str, optional): Chave de autenticação da API. Se None, não adiciona
+                cabeçalho Authorization. Defaults to None.
+        """
         self.base_url = base_url.strip('/')
         self.api_key = api_key
 
     async def _request(self, method: str, endpoint: str, params: Optional[Dict] = None, headers: Optional[Dict] = None) -> Dict[str, Any]:
-        """Método central para todas as requisições"""
+        """Executa uma requisição HTTP assíncrona e retorna a resposta em JSON.
+
+        Método central para realizar requisições HTTP com o método especificado (GET, POST,
+        etc.), incluindo parâmetros de consulta e cabeçalhos personalizados. Adiciona
+        automaticamente o cabeçalho Authorization se uma chave de API estiver configurada.
+        Lida com erros de conexão e respostas HTTP inválidas.
+
+        Args:
+            method (str): Método HTTP (ex.: 'GET', 'POST').
+            endpoint (str): Endpoint da API, relativo à URL base (ex.: 'matches').
+            params (Dict, optional): Parâmetros de consulta a serem incluídos na URL.
+                Defaults to None.
+            headers (Dict, optional): Cabeçalhos HTTP adicionais. Mesclados com o cabeçalho
+                Authorization, se aplicável. Defaults to None.
+
+        Returns:
+            Dict[str, Any]: Resposta da API parseada como dicionário JSON.
+
+        Raises:
+            ValueError: Se o método HTTP ou endpoint forem inválidos (ex.: string vazia).
+            Exception: Para erros de conexão (ex.: servidor inacessível) ou respostas HTTP
+                inválidas (ex.: 404, 401). Inclui detalhes do erro (status e mensagem).
+
+        Example:
+            >>> client = APIClient('https://api.pandascore.co', 'sua-chave')
+            >>> response = await client._request('GET', 'matches', params={'page': 1})
+            >>> print(response)
+            {'matches': [...]}
+        """
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         
         # Headers padrão + customizados
