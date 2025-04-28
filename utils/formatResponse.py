@@ -1,3 +1,5 @@
+from datetime import datetime
+
 def formatUltimaPartida(data):
     """Formata os dados da última partida de Counter-Strike retornados pela API PandaScore.
 
@@ -65,7 +67,7 @@ def formatUltimaPartida(data):
         f"🔥 Última batalha da FURIA no {season}! 🐈‍⬛\n\n"
         f"{furia} ({scoreFuria}) VS {timeAnonimo} ({scoreTimeAnonimo})\n\n"
         f"🏆 Vitória dos {vencedor}! {msgVencedor} 💪\n\n"
-        f"📺 [Assista aos melhores momentos!]({link_stream})\n\n"
+        f"🟣 [Assista aos melhores momentos!]({link_stream})\n\n"
         "#FURIA | #CS2"
     )
     
@@ -75,3 +77,55 @@ def formatUltimaPartida(data):
     return {"text": message, "logo": logoVencedor}
 
         
+def formatProximasPartidas(data):
+    """Extrai os dados e constroi a mensagem personalizada com as proximas partidas"""
+    mensagens = []
+
+    for partida in data:
+        # Dados básicos com tratamento de erros
+        nome_partida = partida.get("name", "Partida sem nome")
+        dataPartida = partida.get("begin_at", "Data desconhecida")
+        
+        # Processamento dos times
+        opponents = partida.get("opponents", [])
+        times = [opponent.get("opponent", {}).get("name", "Time desconhecido") for opponent in opponents]
+        timesVS = " vs ".join(times) if len(times) > 1 else f"{times[0]} (Adversário não definido)" if times else "Partida sem times definidos"
+    
+        linkStream = []
+        for stream in partida.get("streams_list", []):  # Usar streams da partida atual
+            # Aceitar streams principais em inglês, espanhol ou português
+            if stream.get("main", False) and stream.get("language") in ["en", "es", "br"]:
+                linkStream.append(stream["raw_url"])
+
+        utc_time = datetime.fromisoformat(dataPartida)
+        dataLimpa = utc_time.strftime("%d/%m/%Y %H:%M")
+
+        # Construção da mensagem formatada
+        mensagem = (
+            f"🎮 *{timesVS}* ⚔️\n"
+            f"🏆 **{nome_partida}**\n"
+            f"📅 *{dataLimpa}*\n"
+            f"🔴 Assista ao vivo: {', '.join(linkStream)}\n"
+        )
+        
+        mensagens.append(mensagem)
+
+    # Junta todas as mensagens e adiciona cabeçalho
+    return "\n".join([f"Vem torcer com a gente FURIOSOO🔥\n"] + mensagens) if mensagens else "Infelizmente não tem partidas ainda 😭"
+
+def formatPartidaEmAndamento(data):
+    """Retorno das informações formatadas para mensagem do bot, para partidas em andamento"""
+    
+    # indices diretos em data pois ao ter uma partida rodando, o valor da API
+    nomePartida = data[0].get("name", "Nome indisponivel")
+    nomeSerie = data[0]["serie"].get("full_name", "Serie indisponivel")
+    valorPartida = data[0]["tournament"].get("prizepool", "Valor não disponivel")
+    stream = data[0]["streams_list"][0].get("raw_url", "Link indisponivel")
+
+    message = (
+        f"🏆 {nomePartida} {nomeSerie} 🏆\n"
+        f"🤑 {valorPartida}\n"
+        f"🔴[Assista ao vivo]({stream})"
+    )
+
+    return message

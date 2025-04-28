@@ -1,6 +1,6 @@
 from telebot.async_telebot import AsyncTeleBot
 from services.pandas_score_client import PandaScoreClient
-from utils.formatResponse import formatUltimaPartida
+from utils.formatResponse import formatUltimaPartida, formatProximasPartidas, formatPartidaEmAndamento
 
 class CallbacksHandler:
     """Gerencia callbacks de botões inline no bot Telegram, integrando com a API PandaScore.
@@ -55,14 +55,26 @@ class CallbacksHandler:
                 Exception: Se houver falha ao obter dados da API PandaScore, formatar a
                     mensagem ou enviar a resposta (ex.: URL da logo inválida, erro de rede).
             """
-            if call.data == "menu_ultimaPartida":
-                response = await self.pandas_client.get_Ultima_Partida()
-                message = formatUltimaPartida(response)
-                await self.bot.send_photo(
-                    chat_id=call.message.chat.id,
-                    photo=message['logo'],
-                    caption=message['text'],
-                    parse_mode='Markdown',
-                )
-            else:
-                await self.bot.answer_callback_query(call.id, "Outra coisa!")
+            match(call.data):
+                case "menu_ultimaPartida":
+                    response = await self.pandas_client.get_LastMatch()
+                    message = formatUltimaPartida(response)
+                    await self.bot.send_photo(
+                        chat_id=call.message.chat.id,
+                        photo=message['logo'],
+                        caption=message['text'],
+                        parse_mode='Markdown',
+                    )
+
+                case "menu_proximasPartidas":
+                    response = await self.pandas_client.get_NextMatchesFuria()
+                    message = formatProximasPartidas(response)
+                    await self.bot.send_message(chat_id=call.message.chat.id, text=message, parse_mode='Markdown')
+
+                case "menu_partidaEmAndamento":
+                    response = await self.pandas_client.get_PartidaEmAndamento()
+                    if not response:
+                        message = "A partida já acabou meu furioso, mas fica ligado que nas próximas tem mais 😎" 
+                    else:
+                        message = formatPartidaEmAndamento(response)
+                    await self.bot.send_message(chat_id=call.message.chat.id, text=message, parse_mode='Markdown')

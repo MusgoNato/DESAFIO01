@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from services.telegram_client import TelegramBotClient
 from services.pandas_score_client import PandaScoreClient
+from bots.bot_client import BotClientConfiguration
 
 
 async def main():
@@ -42,6 +43,10 @@ async def main():
         webhook_url=WEBHOOK_URL,
         pandas_client=clientPandas
     )
+
+    # Inicializando configurações do BOT
+    await client.bot.set_my_description(description="Bot da FURIA exclusivo para CS 🔫. Acompanhe o time da FURIA 🐈‍⬛")
+    await client.bot.set_my_short_description(short_description="Bot da Furia CS. Manda aquele /start ou /menu pra acessar o menu principal fera 😎")
 
     # Roda o bot
     await client.start()

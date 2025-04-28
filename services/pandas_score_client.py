@@ -34,10 +34,15 @@ class PandaScoreClient(APIClient):
         super().__init__("https://api.pandascore.co/csgo", api_key=api_key)
 
         # Cache para evitar multiplas requisições
-        self._cache = {"ultima_partida": {"data": None, "cache_timestamp": 0}}
+        self._cache = {
+            "ultima_partida": {"data": [], "cache_timestamp": 0},
+            "proximas_partidas": {"data": [], "cache_timestamp": 0},
+            "partida_andamento": {"data": [], "cache_timestamp": 0}
+        }
+
         self._cache_ttl = 300
 
-    async def get_Ultima_Partida(self):
+    async def get_LastMatch(self):
         """Obtém os dados da última partida finalizada da FURIA em CS:GO.
 
         Verifica se há dados válidos no cache (menos de 300 segundos). Se o cache estiver
@@ -61,11 +66,8 @@ class PandaScoreClient(APIClient):
             [{'opponents': [...], 'results': [...], 'winner': {...}, ...}]
         """
         if time.time() - self._cache["ultima_partida"]["cache_timestamp"] < self._cache_ttl:
-            print("Retornando dados em cache")
             return self._cache["ultima_partida"]["data"]
         
-        print("Fazendo requisição a API novamente!")
-
         # Somente faço uma nova requisicao se caso nao tenha dado algum em cache
         dados = await self._request(
             method="GET",
@@ -74,11 +76,48 @@ class PandaScoreClient(APIClient):
             {
                 "filter[status]": "finished",
                 
-                "filter[opponent_id]": 124530, # Id da Furia
+                "filter[opponent_id]": 3260, # Id da Furia
                 "sort": "-begin_at",
                 "page[size]": 1
             }
         )
 
         self._cache["ultima_partida"] = {"data": dados, "cache_timestamp": time.time()}
+        return dados
+    
+    async def get_NextMatchesFuria(self):
+        """Retorna a Proxima Partida da Furia"""
+        if time.time() - self._cache["proximas_partidas"]["cache_timestamp"] < self._cache_ttl:
+            return self._cache["proximas_partidas"]["data"]
+
+        dados = await self._request(
+            method="GET",
+            endpoint="matches/upcoming",
+            params=
+            {
+                "filter[opponent_id]": 3260
+            }
+        )
+
+        self._cache["proximas_partidas"] = {"data": dados, "cache_timestamp": time.time()}
+        
+        return dados
+        
+    async def get_PartidaEmAndamento(self):
+        if time.time() - self._cache["partida_andamento"]["cache_timestamp"] < self._cache_ttl:
+            print("retrorno de cache")
+            print(self._cache)
+            return self._cache["partida_andamento"]["data"]
+        
+        dados = await self._request(
+            method="GET",
+            endpoint="matches/running",
+            params=
+            {
+                "filter[opponent_id]": 3260
+            }
+        )
+
+        self._cache["partida_andamento"] = {"data": dados, "cache_timestamp": time.time()}
+
         return dados
