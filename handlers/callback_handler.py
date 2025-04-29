@@ -1,6 +1,7 @@
 from telebot.async_telebot import AsyncTeleBot
 from services.pandas_score_client import PandaScoreClient
-from utils.formatResponse import formatUltimaPartida, formatProximasPartidas, formatPartidaEmAndamento
+from utils.formatResponse import formatUltimaPartida, formatProximasPartidas, formatPartidaEmAndamento, format_player_page
+from telebot import types
 
 class CallbacksHandler:
     """Gerencia callbacks de botões inline no bot Telegram, integrando com a API PandaScore.
@@ -74,7 +75,82 @@ class CallbacksHandler:
                 case "menu_partidaEmAndamento":
                     response = await self.pandas_client.get_PartidaEmAndamento()
                     if not response:
-                        message = "A partida já acabou meu furioso, mas fica ligado que nas próximas tem mais 😎" 
+                        message = "As partidas já acabaram meu furioso, mas fica ligado na nossa rede 😎" 
                     else:
                         message = formatPartidaEmAndamento(response)
                     await self.bot.send_message(chat_id=call.message.chat.id, text=message, parse_mode='Markdown')
+                
+                case "menu_timeCompleto":
+                    response = await self.pandas_client.get_Team()
+                    
+                    players = response[0].get("players", [])
+                    
+                    player = players[0]
+                    message = format_player_page(player, 0, len(players))
+                    keyboard = create_navigation_buttons(0, len(players))
+
+                    if player.get("image_url"):
+                        await self.bot.send_photo(
+                            chat_id=call.message.chat.id,
+                            photo=player["image_url"],
+                            caption=message,
+                            reply_markup=keyboard,
+                            parse_mode='Markdown'
+                        )
+                    else:
+                        await self.bot.send_message(
+                                    chat_id=call.message.chat.id,
+                                    text=message,
+                                    reply_markup=keyboard,
+                                    parse_mode="Markdown"
+                                )
+                case str() if call.data.startswith("player_"):
+                    player_index = int(call.data.split("_")[1])
+                    response = await self.pandas_client.get_Team()
+                    players = response[0].get("players", [])
+
+                    player = players[player_index]
+                    message = format_player_page(player, player_index, len(players))
+                    keyboard = create_navigation_buttons(player_index, len(players))
+                    
+                    if player.get("image_url"):
+                        await self.bot.edit_message_media(
+                            chat_id=call.message.chat.id,
+                            message_id=call.message.message_id,
+                            media=types.InputMediaPhoto(player["image_url"], caption=message),
+                            reply_markup=keyboard
+                        )
+                    else:
+                        DEFAULT_IMG_PLAYER = "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn1.iconfinder.com%2Fdata%2Ficons%2Fuser-interface-664%2F24%2FUser-512.png&f=1&nofb=1&ipt=42b1085244d2f163e38bf3f65e2732a8b0f4459c30d1368f801704d50eb99e89"
+
+                        media = types.InputMediaPhoto(
+                            media=DEFAULT_IMG_PLAYER,
+                            caption=message,
+                            parse_mode='Markdown'
+                        )
+
+                        await self.bot.edit_message_media(
+                            chat_id=call.message.chat.id,
+                            message_id=call.message.message_id,
+                            reply_markup=keyboard,
+                            media=media,
+                        )
+
+def create_navigation_buttons(current_index, total_players):
+    """Cria botões de navegação (Anterior/Próximo)."""
+    keyboard = types.InlineKeyboardMarkup(row_width=2)
+    
+    # Botão "Anterior" (desabilitado se for o primeiro jogador)
+    btn_prev = types.InlineKeyboardButton(
+        text="◀️ Anterior",
+        callback_data=f"player_{current_index - 1}" if current_index > 0 else "ignored"
+    )
+    
+    # Botão "Próximo" (desabilitado se for o último jogador)
+    btn_next = types.InlineKeyboardButton(
+        text="Próximo ▶️",
+        callback_data=f"player_{current_index + 1}" if current_index < total_players - 1 else "ignored"
+    )
+    
+    keyboard.add(btn_prev, btn_next)
+    return keyboard

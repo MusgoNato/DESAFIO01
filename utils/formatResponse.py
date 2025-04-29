@@ -129,3 +129,13 @@ def formatPartidaEmAndamento(data):
     )
 
     return message
+
+def format_player_page(player, current_index, total_players):
+    """Formata a mensagem de uma página (um jogador)."""        
+    message = (
+        f"👤 *{player.get('name', 'Sem nome')}*\n"
+        f"   - 🎂 Idade: {player.get('age', '?')} anos\n"
+        f"   - 🏳️ Nacionalidade: {player.get('nationality', '?')}\n"
+        f"   - 📅 Aniversário: {player.get('birthday', 'Não informado')}\n"
+    )
+    return message

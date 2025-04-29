@@ -37,7 +37,8 @@ class PandaScoreClient(APIClient):
         self._cache = {
             "ultima_partida": {"data": [], "cache_timestamp": 0},
             "proximas_partidas": {"data": [], "cache_timestamp": 0},
-            "partida_andamento": {"data": [], "cache_timestamp": 0}
+            "partida_andamento": {"data": [], "cache_timestamp": 0},
+            "time_completo": {"data": [], "cache_timestamp": 0}
         }
 
         self._cache_ttl = 300
@@ -105,8 +106,6 @@ class PandaScoreClient(APIClient):
         
     async def get_PartidaEmAndamento(self):
         if time.time() - self._cache["partida_andamento"]["cache_timestamp"] < self._cache_ttl:
-            print("retrorno de cache")
-            print(self._cache)
             return self._cache["partida_andamento"]["data"]
         
         dados = await self._request(
@@ -120,4 +119,23 @@ class PandaScoreClient(APIClient):
 
         self._cache["partida_andamento"] = {"data": dados, "cache_timestamp": time.time()}
 
+        return dados
+    
+    async def get_Team(self):
+        """Retorna a composição do time completo da FURIA"""
+        if time.time() - self._cache["time_completo"]["cache_timestamp"] < self._cache_ttl:
+            print("Retornando dados em CACHE time_completo")
+            return self._cache["time_completo"]["data"]
+        
+        dados = await self._request(
+            method="GET",
+            endpoint="/teams",
+            params=
+            {
+                "filter[id]": 124530
+            }
+        )
+
+        self._cache["time_completo"] = {"data": dados, "cache_timestamp": time.time()}
+        print("Fazendo a requisição a API novamente!")
         return dados

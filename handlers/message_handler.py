@@ -41,7 +41,8 @@ class MessageHandler:
         markup = types.InlineKeyboardMarkup(row_width=1)
         markup.add(types.InlineKeyboardButton('Última partida da FURIA 🐈‍⬛', callback_data="menu_ultimaPartida",),
         types.InlineKeyboardButton(text="Próximas Partidas 🎮📢", callback_data="menu_proximasPartidas"),
-        types.InlineKeyboardButton(text="Partidas ao vivo 🔴", callback_data="menu_partidaEmAndamento"))
+        types.InlineKeyboardButton(text="Partidas ao vivo 🔴", callback_data="menu_partidaEmAndamento"),
+        types.InlineKeyboardButton(text="Time completo ℹ️", callback_data="menu_timeCompleto"))
         
         logo = "https://images.steamusercontent.com/ugc/1009315379357635148/92002071318509F5E315603B7775EABBBBCD2517/?imw=637&imh=358&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=true"
         caption = (
@@ -49,7 +50,7 @@ class MessageHandler:
             "👉 [Explore o universo Fúria no nosso site](https://furia.gg)\n"
             "👉 [Junte-se à comunidade no Discord](https://discord.gg/furia)\n"
             "👉 [Nos siga no Instagram](https://www.instagram.com/furiagg/)\n"
-            "👉 [Assista as nossas lives na Roxinha](https://www.twitch.tv/furiatv)\n"
+            "👉 [Assista as nossas lives na Roxinha Twitch](https://www.twitch.tv/furiatv)\n"
             "Escolha uma das opções abaixo e bora pro próximo level 🦾"
         )
 

@@ -45,7 +45,7 @@ Siga os passos abaixo para instalar e configurar o FURIA CS BOT localmente:
 
     - Faça login na página do ngrok e busque por Setup & Installation
     - Vá a aba download e baixe a versão para o seu Windows
-    - Abra o executável, copie a linha de comando encontrada na página do ngrok em `Your Atuhtoken` e cole no terminal ngrok aberto (**GUARDE O TOKEN E NÃO COMPARTILHE**). Ex da Command Line: `ngrok config add-authtoken seu_authtoken`
+    - Abra o executável, copie a linha de comando encontrada na página do ngrok em `Your Authtoken` e cole no terminal ngrok aberto (**GUARDE O TOKEN E NÃO COMPARTILHE**). Ex da Command Line: `ngrok config add-authtoken seu_authtoken`
     - Após ter configurado o authtoken, execute o seguinte código no terminal do ngrok:
     ```
     ngrok http 5000.
@@ -53,18 +53,18 @@ Siga os passos abaixo para instalar e configurar o FURIA CS BOT localmente:
     * Obs: Caso você queira executar em outra porta sem ser a 5000, por exemplo a 8080 ou 8000, você terá que modificar o arquivo .env para o devido funcionamento.
 
 4. **Clonar o Repositório**:
-    Vá no caminho desejado para o projeto, abra o terminal e execute o seguinte código;
+    Vá no caminho desejado para o projeto, abra o terminal e execute o seguinte código:
    ```
    git clone https://github.com/MusgoNato/DESAFIO01.git
    ```
 
 # Configuração de variáveis de ambientes
-No arquivo `.env` existem as seguintes variáveis de ambiente:
+Renomeie o arquivo `.example.env` para `.env`, neste arquivo existem as seguintes variáveis de ambiente:
 - `BOT_TOKEN` - Referente ao token do bot gerado no chat do BothFather 
-- `API_IA` - Seu token para a API da GroqCloud
+<!-- - `API_IA` - Seu token para a API da GroqCloud para integrar inteligência artificial -->
 - `API_KEY_PANDAS_SCORE` - Seu token para acesso a API da PandaScore
 - `URL_API` - Referente a URL da API pandaScore para o jogo CS (**Não precisa ser modificado**)
-- `ENVIRONMENT`: Referente ao estado do bot (Produção ou desenvolvimento)
+- `ENVIRONMENT`: Referente se o estado do bot está em produção ou desenvolvimento (**Não precisa ser modificado**)
 - `WEBHOOK_URL`: Referente a URL gerada pelo ngrok após executar ngrok http 5000
 - `HOST` : Host padrão (**Não precisa ser modificado**)
 - `PORT` : Porta padrão (**Não precisa ser modificado**)
@@ -93,7 +93,7 @@ Comandos disponiveis ao bot:
     ```
 
 # Erros
-- Verifique a url
+- Verifique a url gerada pelo ngrok se é igual a WEBHOOK_URL no arquivo .env
 - Verifique o token do bot
 - Verifique o token da API pandaScore
 - Verifique o token da API GroqCloud
