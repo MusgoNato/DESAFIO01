@@ -111,7 +111,7 @@ def formatProximasPartidas(data):
         mensagens.append(mensagem)
 
     # Junta todas as mensagens e adiciona cabeçalho
-    return "\n".join([f"Vem torcer com a gente FURIOSOO🔥\n"] + mensagens) if mensagens else "Infelizmente não tem partidas ainda 😭"
+    return "\n".join([f"Vem torcer com a gente FURIOSO(A)🔥\n"] + mensagens) if mensagens else "Infelizmente não tem partidas ainda 😭"
 
 def formatPartidaEmAndamento(data):
     """Retorno das informações formatadas para mensagem do bot, para partidas em andamento"""
@@ -130,7 +130,7 @@ def formatPartidaEmAndamento(data):
 
     return message
 
-def format_player_page(player, current_index, total_players):
+def format_player_page(player):
     """Formata a mensagem de uma página (um jogador)."""        
     message = (
         f"👤 *{player.get('name', 'Sem nome')}*\n"

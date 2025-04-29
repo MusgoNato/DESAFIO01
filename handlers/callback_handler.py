@@ -75,7 +75,7 @@ class CallbacksHandler:
                 case "menu_partidaEmAndamento":
                     response = await self.pandas_client.get_PartidaEmAndamento()
                     if not response:
-                        message = "As partidas já acabaram meu furioso, mas fica ligado na nossa rede 😎" 
+                        message = "As partidas já acabaram meu furioso(a), mas fica ligado na nossa rede 😎" 
                     else:
                         message = formatPartidaEmAndamento(response)
                     await self.bot.send_message(chat_id=call.message.chat.id, text=message, parse_mode='Markdown')
@@ -86,7 +86,7 @@ class CallbacksHandler:
                     players = response[0].get("players", [])
                     
                     player = players[0]
-                    message = format_player_page(player, 0, len(players))
+                    message = format_player_page(player)
                     keyboard = create_navigation_buttons(0, len(players))
 
                     if player.get("image_url"):
@@ -110,7 +110,7 @@ class CallbacksHandler:
                     players = response[0].get("players", [])
 
                     player = players[player_index]
-                    message = format_player_page(player, player_index, len(players))
+                    message = format_player_page(player)
                     keyboard = create_navigation_buttons(player_index, len(players))
                     
                     if player.get("image_url"):
