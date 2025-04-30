@@ -6,6 +6,7 @@ from handlers.message_handler import MessageHandler
 from handlers.callback_handler import CallbacksHandler
 import asyncio
 from services.pandas_score_client import PandaScoreClient
+from telebot.types import BotCommand
 
 class TelegramBotClient:
     """Cliente para gerenciar um bot Telegram com suporte a webhooks e integração com PandaScore.
@@ -93,6 +94,12 @@ class TelegramBotClient:
                 None
             """
             await self.handler._send_main_menu(message)
+            
+        @self.bot.message_handler(content_types=['text'])
+        async def handle_message_text(message):
+            """Manipulador para mensagens de texto do usuário"""
+            # await self.handler._send_main_menu(message)
+            # Posso colocar curiosidades aqui, consultar a IA e ela me retornar somente a mensagem
 
     async def start(self):
         """Inicia o bot Telegram, configurando o webhook ou usando polling no modo debug.
@@ -130,3 +137,10 @@ class TelegramBotClient:
             config = Config()
             config.bind = ["0.0.0.0:5000"]
             await serve(self.app, config)
+        
+    async def set_BotConfig(self):
+        """Seta todas as configurações do BOT"""
+        await self.bot.set_my_name("FURIA CS BOT 🔥")
+        await self.bot.set_my_description("Bot da FURIA exclusivo para CS 🔫. Acompanhe o time da FURIA 🐈‍⬛")
+        await self.bot.set_my_short_description("Bot da Furia CS. Manda aquele /menu pra acessar o menu principal fera 😎")
+        await self.bot.set_my_commands([BotCommand("menu", "Menu principal")])

@@ -44,9 +44,8 @@ async def main():
         pandas_client=clientPandas
     )
 
-    # Inicializando configurações do BOT
-    await client.bot.set_my_description(description="Bot da FURIA exclusivo para CS 🔫. Acompanhe o time da FURIA 🐈‍⬛")
-    await client.bot.set_my_short_description(short_description="Bot da Furia CS. Manda aquele /start ou /menu pra acessar o menu principal fera 😎")
+    # Configura o BOT
+    await client.set_BotConfig()
 
     # Roda o bot
     await client.start()
