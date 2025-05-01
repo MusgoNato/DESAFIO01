@@ -2,7 +2,8 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot import types
 
 class MessageHandler:
-    """Gerencia mensagens recebidas pelo bot Telegram e exibe o menu principal.
+    """
+    Gerencia mensagens recebidas pelo bot Telegram e exibe o menu principal.
 
     Responsável por processar comandos e mensagens do usuário, enviando respostas
     interativas, como o menu principal com botões inline. Integra-se com o bot
@@ -13,7 +14,8 @@ class MessageHandler:
     """
 
     def __init__(self, bot: AsyncTeleBot):
-        """Inicializa o manipulador de mensagens com o bot Telegram.
+        """
+        Inicializa o manipulador de mensagens com o bot Telegram.
 
         Args:
             bot (AsyncTeleBot): Instância do bot Telegram configurada com token e webhook.
@@ -22,7 +24,8 @@ class MessageHandler:
 
 
     async def _send_main_menu(self, message):
-        """Envia o menu principal do bot Telegram com opções interativas.
+        """
+        Envia o menu principal do bot Telegram com opções interativas.
 
         Cria um menu com botões inline para exibir o resultado da última partida da FURIA.
         Envia a logo oficial da FURIA como uma imagem para reforçar a identidade visual.
@@ -33,9 +36,6 @@ class MessageHandler:
 
         Returns:
             None
-
-        Raises:
-            Exception: Se houver falha ao enviar a imagem, a mensagem ou criar o markup.
         """
         
         markup = types.InlineKeyboardMarkup(row_width=1)
@@ -44,7 +44,7 @@ class MessageHandler:
         types.InlineKeyboardButton(text="Partidas ao vivo 🔴", callback_data="menu_partidaEmAndamento"),
         types.InlineKeyboardButton(text="Time completo ℹ️", callback_data="menu_timeCompleto"))
         
-        logo = "https://images.steamusercontent.com/ugc/1009315379357635148/92002071318509F5E315603B7775EABBBBCD2517/?imw=637&imh=358&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=true"
+        logo = "https://www.negitaku.org/wp-content/uploads/2019/06/furia.jpg"
         caption = (
             f"🔥 Bem-vindo à nação Fúria {message.from_user.first_name} 🔥\n"
             "👉 [Explore o universo Fúria no nosso site](https://furia.gg)\n"

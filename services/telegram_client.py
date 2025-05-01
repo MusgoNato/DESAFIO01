@@ -1,4 +1,3 @@
-import os
 from quart import Quart, request
 from telebot.async_telebot import AsyncTeleBot
 from telebot import types
@@ -7,9 +6,12 @@ from handlers.callback_handler import CallbacksHandler
 import asyncio
 from services.pandas_score_client import PandaScoreClient
 from telebot.types import BotCommand
+from hypercorn.asyncio import serve
+from hypercorn.config import Config
+from utils.formatResponse import get_Curiosidades 
 
 class TelegramBotClient:
-    """Cliente para gerenciar um bot Telegram com suporte a webhooks e integração com PandaScore.
+    """Cliente para gerenciar um bot Telegram com suporte a webhooks.
 
     Configura um bot Telegram assíncrono usando AsyncTeleBot, registra manipuladores de mensagens
     e callbacks, e inicia um servidor webhook com Quart e Hypercorn. Integra-se com a API
@@ -29,15 +31,14 @@ class TelegramBotClient:
             bot_token (str): Token de autenticação do bot fornecido pelo @BotFather.
             webhook_url (str): URL base para o webhook (ex.: 'https://d1c8-45-187-27-161.ngrok-free.app/').
             pandas_client (PandaScoreClient): Cliente configurado para acessar a API PandaScore.
-
-        Raises:
-            ValueError: Se o bot_token ou webhook_url forem vazios ou inválidos.
         """
+
+        # instancias necessarias para conexao com o bot, troca de mensagens por botoes inline e envio de mensagens
         self.bot = AsyncTeleBot(bot_token)
         self.callback_handler = CallbacksHandler(self.bot, pandas_client)
-
         self.handler = MessageHandler(self.bot)
 
+        # inicialização para expor localmente e criar conexao webhook posteriormente
         self.app = Quart(__name__)
         self.webhook_url = webhook_url
 
@@ -64,9 +65,6 @@ class TelegramBotClient:
 
             Returns:
                 tuple: Resposta HTTP com corpo vazio e status 200.
-
-            Raises:
-                Exception: Se houver falha ao processar o JSON ou as atualizações.
             """
             update = await request.get_json()
             await self.bot.process_new_updates([types.Update.de_json(update)])
@@ -74,17 +72,19 @@ class TelegramBotClient:
 
     # Registra os handlers para envio de mensagens
     def _register_handlers(self):
-        """Registra manipuladores de mensagens para comandos do Telegram.
+        """
+        Registra manipuladores de mensagens para comandos do Telegram.
 
-        Configura um manipulador para os comandos '/start' e '/menu', que exibe o menu
+        Configura um manipulador para os comandos '/menu' e /curiosidade, que exibe o menu
         principal do bot usando o MessageHandler.
 
         Returns:
             None
         """
-        @self.bot.message_handler(commands=['start', 'menu'])
+        @self.bot.message_handler(commands=['menu'])
         async def handle_start(message):
-            """Processa os comandos /start e /menu, exibindo o menu principal.
+            """
+            Processa os comandos /start e /menu, exibindo o menu principal.
 
             Args:
                 message (telebot.types.Message): Objeto da mensagem recebida, contendo
@@ -95,52 +95,54 @@ class TelegramBotClient:
             """
             await self.handler._send_main_menu(message)
             
-        @self.bot.message_handler(content_types=['text'])
+        @self.bot.message_handler(commands=['curiosidade'])
         async def handle_message_text(message):
-            """Manipulador para mensagens de texto do usuário"""
-            # await self.handler._send_main_menu(message)
-            # Posso colocar curiosidades aqui, consultar a IA e ela me retornar somente a mensagem
+            """
+            Manipulador para envio de curiosidades sobre a FURIA
+            """
+            curiosidade = get_Curiosidades()
+            await self.bot.send_message(message.chat.id, text=curiosidade, parse_mode='Markdown')
 
     async def start(self):
-        """Inicia o bot Telegram, configurando o webhook ou usando polling no modo debug.
+        """
+        Inicia o bot Telegram, configurando o webhook.
 
-        No modo debug (DEBUG=True), usa polling para testar o bot localmente (desativado
-        por padrão). Em produção, remove webhooks existentes, configura um novo webhook
+        Remove webhooks existentes, configura um novo webhook
         com a URL fornecida e inicia o servidor Quart com Hypercorn na porta 5000.
 
         Returns:
             None
 
-        Raises:
-            ValueError: Se a URL do webhook for inválida ou malformada.
-            Exception: Se houver falha ao configurar o webhook ou iniciar o servidor.
-
         Notes:
-            Requer as bibliotecas Quart e Hypercorn para o servidor webhook. O ambiente
-            deve definir a variável DEBUG para ativar o modo debug.
+            Requer as bibliotecas Quart e Hypercorn para o servidor webhook.
         """
-        if os.getenv('DEBUG') == 'True':
-            print("🔍 Modo debug: usando polling")
-            # await self.bot.infinity_polling() 
-        else:
-            await asyncio.sleep(1) 
-            await self.bot.remove_webhook()
-            full_url = f"{self.webhook_url}webhook/{self.bot.token}" # Removendo a slash, antes deu b.o
-            
-            print(f"⏳ Configurando webhook: {full_url}")
-            await self.bot.set_webhook(url=full_url, allowed_updates=["message", "callback_query"])
-            
-            # importação das bibliotecas somente aonde irei usar
-            from hypercorn.asyncio import serve
-            from hypercorn.config import Config
-            
-            config = Config()
-            config.bind = ["0.0.0.0:5000"]
-            await serve(self.app, config)
+        await asyncio.sleep(1) 
+        await self.bot.remove_webhook()
+
+        # Removo a slash antes do webhook para evitar problemas com a slash padrao que vem ao final da url gerada pelo ngrok
+        full_url = f"{self.webhook_url}webhook/{self.bot.token}"
+        
+        # Seto a webhook
+        print(f"⏳ Configurando webhook: {full_url}")
+        await self.bot.set_webhook(url=full_url, allowed_updates=["message", "callback_query"])
+        
+        config = Config()
+
+        # Localhost
+        config.bind = ["0.0.0.0:5000"]
+        await serve(self.app, config)
         
     async def set_BotConfig(self):
-        """Seta todas as configurações do BOT"""
-        await self.bot.set_my_name("FURIA CS BOT 🔥")
-        await self.bot.set_my_description("Bot da FURIA exclusivo para CS 🔫. Acompanhe o time da FURIA 🐈‍⬛")
-        await self.bot.set_my_short_description("Bot da Furia CS. Manda aquele /menu pra acessar o menu principal fera 😎")
-        await self.bot.set_my_commands([BotCommand("menu", "Menu principal")])
+        """
+        Função que realiza todas as configurações do BOT (Exceto mudança de foto de perfil, pois somente é possível manualmente)
+        """
+        try:
+            await self.bot.set_my_name("FURIA CS BOT 🔥")
+            await self.bot.set_my_description("Bot da FURIA exclusivo para CS 🔫. Acompanhe o time da FURIA 🐈‍⬛")
+            await self.bot.set_my_short_description("Bot da Furia CS. Manda aquele /menu pra acessar o menu principal ou /curiosidade pra curiosidades sobre a FURIA fera 😎")
+            await self.bot.set_my_commands([BotCommand("menu", "Menu principal"), BotCommand("curiosidade", "Curiosidades da FURIA")])
+        except Exception as e:
+            print(f"Problema em configurar o BOT: ERRO: {e}\n\n")
+
+
+        

@@ -1,10 +1,11 @@
-from typing import Optional, Dict, Any
-import aiohttp
 from services.api_client import APIClient
 import time
 
+FURIA_ID = 124530 
+
 class PandaScoreClient(APIClient):
-    """Cliente para interagir com a API PandaScore para dados de partidas de CS:GO/CS2.
+    """
+    Cliente para interagir com a API PandaScore para dados de partidas de CS:GO/CS2.
 
     Estende a classe APIClient para realizar requisições à API PandaScore, com suporte a
     autenticação via chave de API e cache para otimizar chamadas frequentes. Projetada para
@@ -20,7 +21,8 @@ class PandaScoreClient(APIClient):
     """
     
     def __init__(self, api_key: str):
-        """Inicializa o cliente PandaScore com a chave de API.
+        """
+        Inicializa o cliente PandaScore com a chave de API.
 
         Configura a URL base da API PandaScore para CS:GO/CS2 e inicializa o cache para
         evitar requisições redundantes à API.
@@ -28,8 +30,6 @@ class PandaScoreClient(APIClient):
         Args:
             api_key (str): Chave de autenticação da API PandaScore.
 
-        Raises:
-            ValueError: Se a chave de API for vazia ou None.
         """
         super().__init__("https://api.pandascore.co/csgo", api_key=api_key)
 
@@ -43,8 +43,9 @@ class PandaScoreClient(APIClient):
 
         self._cache_ttl = 300
 
-    async def get_LastMatch(self):
-        """Obtém os dados da última partida finalizada da FURIA em CS:GO.
+    async def get_UltimaPartida(self):
+        """
+        Obtém os dados da última partida finalizada da FURIA em CS:GO.
 
         Verifica se há dados válidos no cache (menos de 300 segundos). Se o cache estiver
         válido, retorna os dados armazenados. Caso contrário, faz uma requisição à API
@@ -54,11 +55,6 @@ class PandaScoreClient(APIClient):
         Returns:
             list: Lista contendo um dicionário com os dados da última partida, incluindo
                 campos como 'opponents', 'results', 'winner', e 'streams_list'.
-
-        Raises:
-            Exception: Se a requisição à API falhar (ex.: erro HTTP, conexão, ou chave
-                inválida). A exceção é propagada do método _request da classe base.
-            ValueError: Se o opponent_id ou outros parâmetros forem inválidos.
 
         Example:
             >>> client = PandaScoreClient("sua-chave")
@@ -70,72 +66,89 @@ class PandaScoreClient(APIClient):
             return self._cache["ultima_partida"]["data"]
         
         # Somente faço uma nova requisicao se caso nao tenha dado algum em cache
-        dados = await self._request(
-            method="GET",
-            endpoint=f"/matches",
-            params=
-            {
-                "filter[status]": "finished",
-                
-                "filter[opponent_id]": 3260, # Id da Furia
-                "sort": "-begin_at",
-                "page[size]": 1
-            }
-        )
+        try:
 
-        self._cache["ultima_partida"] = {"data": dados, "cache_timestamp": time.time()}
-        return dados
+            dados = await self._request(
+                method="GET",
+                endpoint=f"/matches",
+                params=
+                {
+                    "filter[status]": "finished",
+                    
+                    "filter[opponent_id]": FURIA_ID,
+                    "sort": "-begin_at",
+                    "page[size]": 1
+                }
+            )
+
+            self._cache["ultima_partida"] = {"data": dados, "cache_timestamp": time.time()}
+            return dados
+        except Exception as e:
+            print(f"Não foi possivel realizar a requisição a Ultima partida da Furia: ERRO {e}\n\n")
+            return []
     
-    async def get_NextMatchesFuria(self):
+    async def get_ProximasPartidas(self):
         """Retorna a Proxima Partida da Furia"""
         if time.time() - self._cache["proximas_partidas"]["cache_timestamp"] < self._cache_ttl:
             return self._cache["proximas_partidas"]["data"]
 
-        dados = await self._request(
-            method="GET",
-            endpoint="matches/upcoming",
-            params=
-            {
-                "filter[opponent_id]": 3260
-            }
-        )
+        try:
+            dados = await self._request(
+                method="GET",
+                endpoint="matches/upcoming",
+                params=
+                {
+                    "filter[opponent_id]": FURIA_ID
+                }
+            )
 
-        self._cache["proximas_partidas"] = {"data": dados, "cache_timestamp": time.time()}
+            self._cache["proximas_partidas"] = {"data": dados, "cache_timestamp": time.time()}
         
-        return dados
-        
+            return dados
+        except Exception as e:
+            print(f"Nao foi possivel realizar a requisição a Proximas Partidas da Furia: ERRO {e}\n\n")
+            return []
+
     async def get_PartidaEmAndamento(self):
         if time.time() - self._cache["partida_andamento"]["cache_timestamp"] < self._cache_ttl:
             return self._cache["partida_andamento"]["data"]
         
-        dados = await self._request(
-            method="GET",
-            endpoint="matches/running",
-            params=
-            {
-                "filter[opponent_id]": 3260
-            }
-        )
+        try:
+            dados = await self._request(
+                method="GET",
+                endpoint="matches/running",
+                params=
+                {
+                    "filter[opponent_id]": FURIA_ID
+                }
+            )
 
-        self._cache["partida_andamento"] = {"data": dados, "cache_timestamp": time.time()}
+            self._cache["partida_andamento"] = {"data": dados, "cache_timestamp": time.time()}
 
-        return dados
-    
-    async def get_Team(self):
-        """Retorna a composição do time completo da FURIA"""
-        if time.time() - self._cache["time_completo"]["cache_timestamp"] < self._cache_ttl:
-            print("Retornando dados em CACHE time_completo")
-            return self._cache["time_completo"]["data"]
+            return dados
+        except Exception as e:
+            print(f"Nao foi possivel fazer a requisição para partidas em andamento: ERRO {e}\n\n")
+            return []
         
-        dados = await self._request(
-            method="GET",
-            endpoint="/teams",
-            params=
-            {
-                "filter[id]": 124530
-            }
-        )
+    async def get_Time(self):
+        """
+        Retorna a composição do time completo da FURIA
+        """
+        if time.time() - self._cache["time_completo"]["cache_timestamp"] < self._cache_ttl:
+            return self._cache["time_completo"]["data"]
+        try:
 
-        self._cache["time_completo"] = {"data": dados, "cache_timestamp": time.time()}
-        print("Fazendo a requisição a API novamente!")
-        return dados
+            dados = await self._request(
+                method="GET",
+                endpoint="/teams",
+                params=
+                {
+                    "filter[id]": FURIA_ID
+                }
+            )
+
+            self._cache["time_completo"] = {"data": dados, "cache_timestamp": time.time()}
+            return dados
+        except Exception as e:
+            print(f"Nao foi possivel realizar a requisição a get_Team: ERRO {e}\n\n")
+            return []

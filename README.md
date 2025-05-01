@@ -61,10 +61,8 @@ Siga os passos abaixo para instalar e configurar o FURIA CS BOT localmente:
 # Configuração de variáveis de ambientes
 Renomeie o arquivo `.example.env` para `.env`, neste arquivo existem as seguintes variáveis de ambiente:
 - `BOT_TOKEN` - Referente ao token do bot gerado no chat do BothFather 
-<!-- - `API_IA` - Seu token para a API da GroqCloud para integrar inteligência artificial -->
 - `API_KEY_PANDAS_SCORE` - Seu token para acesso a API da PandaScore
 - `URL_API` - Referente a URL da API pandaScore para o jogo CS (**Não precisa ser modificado**)
-- `ENVIRONMENT`: Referente se o estado do bot está em produção ou desenvolvimento (**Não precisa ser modificado**)
 - `WEBHOOK_URL`: Referente a URL gerada pelo ngrok após executar ngrok http 5000
 - `HOST` : Host padrão (**Não precisa ser modificado**)
 - `PORT` : Porta padrão (**Não precisa ser modificado**)
@@ -72,7 +70,7 @@ Renomeie o arquivo `.example.env` para `.env`, neste arquivo existem as seguinte
 Cada variável deve ser preenchida de acordo com as especificações fornecidas.
 
 # Rodar o bot
-Entre na pasta do projeto, abra o terminal e digite o seguinte comando:
+Após as configurações acima, entre na pasta do projeto clonado, abra o terminal (CMD) e digite o seguinte comando:
 ```
 py main.py
 ```
@@ -89,11 +87,19 @@ Comandos disponiveis ao bot:
 
 - Para o menu principal: 
     ```
-    /start e /menu
+    /menu
+    ```
+- Para curiosidades:
+    ```
+    /curiosidade
     ```
 
 # Erros
-- Verifique a url gerada pelo ngrok se é igual a WEBHOOK_URL no arquivo .env
-- Verifique o token do bot
-- Verifique o token da API pandaScore
-- Verifique o token da API GroqCloud
+- Primeiro verifique todas as variáveis de ambiente se estão corretas:
+    - Url gerada pelo ngrok
+    - Token do bot
+    - Token da API pandaScore
+    - Token da API GroqCloud
+
+- *Error code: 429. Description: Too Many Requests: retry after 78751*
+    - Esse erro ocorre em algumas ocasiões, quando o bot faz muitos envios a webhook ou por algum motivo relacionado a requisições, ocasionalmente o telegram bloqueia seu bot por um determinado tempo, caso você queira prosseguir terá que aguardar o fim do tempo de bloqueio ou criar um outro BOT no BotFather e modificar o arquivo `.env` 

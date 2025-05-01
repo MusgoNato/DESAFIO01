@@ -1,7 +1,10 @@
 from datetime import datetime
+import json
+import random
 
-def formatUltimaPartida(data):
-    """Formata os dados da última partida de Counter-Strike retornados pela API PandaScore.
+def format_UltimaPartida(data):
+    """
+    Formata os dados da última partida de Counter-Strike retornados pela API PandaScore.
 
     Extrai informações como nomes dos times, placar, vencedor, logo do vencedor e link do stream
     para criar uma mensagem formatada em Markdown, ideal para envio via Telegram.
@@ -16,11 +19,6 @@ def formatUltimaPartida(data):
             - text (str): Mensagem formatada em Markdown com detalhes da partida (times, placar,
               vencedor, link do stream).
             - logo (str or None): URL da logo do time vencedor ou None se não disponível.
-
-    Raises:
-        KeyError: Se os campos esperados em `data` (ex.: `opponents`, `winner`) estiverem ausentes
-            ou malformados. Nesse caso, retorna um dicionário com uma mensagem de erro em `text`
-            e `logo` como None.
 
     Example:
         >>> data = [{"opponents": [...], "results": [...], "winner": {...}, "streams_list": [...]}]
@@ -53,10 +51,8 @@ def formatUltimaPartida(data):
 
     # Varrer a lista pelo ultimo elemento, reduz o tempo, pois eh comum que a stream official fique na ultima posicao (Porem pode mudar!)
     for stream in data[0]['streams_list'][::-1]:
-        print(stream)
         if (stream['official'] == True) and (stream['language'] == 'en' or stream['language'] == 'br'):
             link_stream = stream['raw_url']
-            print(link_stream)
             break
         else:
             # Sem streams para outra idioma
@@ -70,15 +66,59 @@ def formatUltimaPartida(data):
         f"🟣 [Assista aos melhores momentos!]({link_stream})\n\n"
         "#FURIA | #CS2"
     )
-    
-    # Para debug no console
-    print(message)
 
     return {"text": message, "logo": logoVencedor}
 
         
-def formatProximasPartidas(data):
-    """Extrai os dados e constroi a mensagem personalizada com as proximas partidas"""
+def format_ProximasPartidas(data):
+    """
+        Formata dados de partidas futuras para uma mensagem amigável com marcação.
+        Processa uma lista de partidas futuras da API PandaScore, extraindo informações relevantes
+        (nomes dos times, data, links de transmissão) e formata em uma string pronta para exibição
+        em aplicações de mensagens como Telegram ou Discord.
+
+        Args:
+            data (List[Dict]): Lista de dicionários contendo dados brutos de partidas da API.
+                Campos esperados por partida:
+                - name (str): Nome da partida/torneio
+                - begin_at (str): Data/hora
+                - opponents (List[Dict]): Lista de oponentes com detalhes dos times
+                - streams_list (List[Dict]): Lista de streams de transmissão
+
+        Returns:
+            str: Mensagem formatada com:
+            - Nomes dos times em formato "Time A vs Time B"
+            - Nome do torneio/partida
+            - Data/hora localizada formatada (DD/MM/AAAA HH:MM)
+            - Links de transmissão relevantes
+            - Mensagem padrão caso não haja partidas
+
+        Example:
+            >>> partidas = [{
+            ...     "name": "BLAST Premier 2023",
+            ...     "begin_at": "2023-12-15T19:00:00Z",
+            ...     "opponents": [
+            ...         {"opponent": {"name": "FURIA"}},
+            ...         {"opponent": {"name": "Team Vitality"}}
+            ...     ],
+            ...     "streams_list": [
+            ...         {"main": True, "language": "en", "raw_url": "https://twitch.tv/esl_csgo"}
+            ...     ]
+            ... }]
+            >>> print(formatProximasPartidas(partidas))
+            Vem torcer com a gente FURIOSO(A)🔥
+            
+            🎮 *FURIA vs Team Vitality* ⚔️
+            🏆 **BLAST Premier 2023**
+            📅 *15/12/2023 16:00*
+            🔴 Assista ao vivo: https://twitch.tv/esl_csgo
+
+        Notes:
+            - Filtra streams principais em inglês, espanhol ou português
+            - Mensagem padrão caso não haja partidas: "Infelizmente não tem partidas ainda 😭"
+            - Formato de saída otimizado para Markdown (suporte a negrito/itálico)
+        """
+
     mensagens = []
 
     for partida in data:
@@ -92,7 +132,8 @@ def formatProximasPartidas(data):
         timesVS = " vs ".join(times) if len(times) > 1 else f"{times[0]} (Adversário não definido)" if times else "Partida sem times definidos"
     
         linkStream = []
-        for stream in partida.get("streams_list", []):  # Usar streams da partida atual
+
+        for stream in partida.get("streams_list", []):
             # Aceitar streams principais em inglês, espanhol ou português
             if stream.get("main", False) and stream.get("language") in ["en", "es", "br"]:
                 linkStream.append(stream["raw_url"])
@@ -113,15 +154,58 @@ def formatProximasPartidas(data):
     # Junta todas as mensagens e adiciona cabeçalho
     return "\n".join([f"Vem torcer com a gente FURIOSO(A)🔥\n"] + mensagens) if mensagens else "Infelizmente não tem partidas ainda 😭"
 
-def formatPartidaEmAndamento(data):
-    """Retorno das informações formatadas para mensagem do bot, para partidas em andamento"""
+def format_PartidaAndamento(data):
+    """
+    Formata dados de partidas em andamento para mensagem do bot com marcação.
+
+    Processa os dados de uma partida ativa para gerar uma mensagem formatada com informações
+    essenciais: nome da partida, série/torneio, premiação e link de transmissão.
+
+    Args:
+        data (List[Dict]): Lista contendo pelo menos um item com dados da partida ativa.
+            Campos esperados no primeiro item:
+            - name (str): Nome da partida
+            - serie (Dict): Dados da série/torneio com campo 'full_name'
+            - tournament (Dict): Dados do torneio com campo 'prizepool'
+            - streams_list (List[Dict]): Lista de streams de transmissão
+
+    Returns:
+        str: Mensagem formatada no padrão:
+        - Nome da partida e série/torneio
+        - Valor da premiação
+        - Link de transmissão ativo (Markdown)
+        
+        Exemplo de retorno:
+        "🏆 ESL Pro League S18 ESL Pro League 🏆
+         🤑 $850,000
+         🔴[Assista ao vivo](https://twitch.tv/esl_csgo)"
+
+    Example:
+        >>> partida = [{
+        ...     "name": "ESL Pro League S18",
+        ...     "serie": {"full_name": "ESL Pro League"},
+        ...     "tournament": {"prizepool": "$850,000"},
+        ...     "streams_list": [{"raw_url": "https://twitch.tv/esl_csgo"}]
+        ... }]
+        >>> print(formatPartidaEmAndamento(partida))
+        🏆 ESL Pro League S18 ESL Pro League 🏆
+        🤑 $850,000
+        🔴[Assista ao vivo](https://twitch.tv/esl_csgo)
+
+    Notes:
+        - Assume que sempre existe pelo menos uma partida em andamento (lista não vazia)
+        - Usa o primeiro link de transmissão disponível na lista
+        - Formatação otimizada para Markdown (links clicáveis)
+        - Trata campos inexistentes com valores padrão:
+          "Nome indisponivel", "Serie indisponivel", etc.
+    """
     
     # indices diretos em data pois ao ter uma partida rodando, o valor da API
     nomePartida = data[0].get("name", "Nome indisponivel")
     nomeSerie = data[0]["serie"].get("full_name", "Serie indisponivel")
     valorPartida = data[0]["tournament"].get("prizepool", "Valor não disponivel")
     stream = data[0]["streams_list"][0].get("raw_url", "Link indisponivel")
-
+    
     message = (
         f"🏆 {nomePartida} {nomeSerie} 🏆\n"
         f"🤑 {valorPartida}\n"
@@ -130,8 +214,27 @@ def formatPartidaEmAndamento(data):
 
     return message
 
-def format_player_page(player):
-    """Formata a mensagem de uma página (um jogador)."""        
+def format_PaginaJogador(player):
+    """
+    Formata os dados de um jogador em uma mensagem estruturada para o bot.
+
+    Converte as informações de um jogador (como nome, idade, nacionalidade e data de nascimento)
+    em uma mensagem formatada com emojis e marcação para melhor legibilidade em aplicações de chat.
+
+    Args:
+        player (Dict): Dicionário contendo dados do jogador. Campos suportados:
+            - name (str): Nome completo/nickname do jogador
+            - age (int/str): Idade do jogador
+            - nationality (str): Nacionalidade (código de país ou nome completo)
+            - birthday (str): Data de nascimento em qualquer formato
+
+    Returns:
+        str: Mensagem formatada no seguinte padrão:
+        👤 *Nome do Jogador*
+           - 🎂 Idade: X anos
+           - 🏳️ Nacionalidade: País
+           - 📅 Aniversário: Data
+    """       
     message = (
         f"👤 *{player.get('name', 'Sem nome')}*\n"
         f"   - 🎂 Idade: {player.get('age', '?')} anos\n"
@@ -139,3 +242,20 @@ def format_player_page(player):
         f"   - 📅 Aniversário: {player.get('birthday', 'Não informado')}\n"
     )
     return message
+
+def get_Curiosidades():
+    """
+    Retorna uma curiosidade aleatoriamente
+
+    Args:
+        Nenhum
+
+    Returns:   
+        str: curiosidade disponivel no arquivo curiosidades.json
+    """
+    with open('utils/data_curiosidade/curiosidades.json', 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    
+    indice = random.randint(0, len(data) - 1)
+
+    return data[indice]["curiosidade"]
