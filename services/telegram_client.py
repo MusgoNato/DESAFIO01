@@ -81,7 +81,7 @@ class TelegramBotClient:
         Returns:
             None
         """
-        @self.bot.message_handler(commands=['menu'])
+        @self.bot.message_handler(commands=['start', 'menu'])
         async def handle_start(message):
             """
             Processa os comandos /start e /menu, exibindo o menu principal.

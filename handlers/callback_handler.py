@@ -54,6 +54,9 @@ class CallbacksHandler:
             Returns:
                 None
             """
+            # Animação de carregamento
+            await self.bot.send_chat_action(chat_id=call.message.chat.id, action='typing')
+            
             match(call.data):
                 case "menu_ultimaPartida":
                     response = await self.pandas_client.get_UltimaPartida()
@@ -114,7 +117,7 @@ class CallbacksHandler:
 
                     # Pego todos os jogadores
                     player_index = int(call.data.split("_")[1])
-                    response = await self.pandas_client.get_Team()
+                    response = await self.pandas_client.get_Time()
                     players = response[0].get("players", [])
 
                     # Pego o jogador e formato a resposta com os botoes de navegação
@@ -147,6 +150,8 @@ class CallbacksHandler:
                             reply_markup=keyboard,
                             media=media,
                         )
+            # Volta a ser vazia minha ação
+            await self.bot.send_chat_action(call.message.chat.id, action='')
 
 def create_BotoesNavegacao(current_index, total_players):
     """

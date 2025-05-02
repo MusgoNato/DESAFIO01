@@ -1,8 +1,9 @@
 import aiohttp
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 
 class APIClient:
-    """Cliente base para requisições HTTP assíncronas a APIs externas.
+    """
+    Cliente base para requisições HTTP assíncronas a APIs externas.
 
     Fornece uma interface genérica para realizar requisições HTTP (GET, POST, etc.) usando
     aiohttp, com suporte a autenticação via chave de API e personalização de parâmetros e
@@ -16,7 +17,8 @@ class APIClient:
     """
     
     def __init__(self, base_url: str, api_key: Optional[str] = None):
-        """Inicializa o cliente HTTP com a URL base e uma chave de API opcional.
+        """
+        Inicializa o cliente HTTP com a URL base e uma chave de API opcional.
 
         Args:
             base_url (str): URL base da API (ex.: 'https://api.pandascore.co').
@@ -27,7 +29,8 @@ class APIClient:
         self.api_key = api_key
 
     async def _request(self, method: str, endpoint: str, params: Optional[Dict] = None, headers: Optional[Dict] = None) -> Dict[str, Any]:
-        """Executa uma requisição HTTP assíncrona e retorna a resposta em JSON.
+        """
+        Executa uma requisição HTTP assíncrona e retorna a resposta em JSON.
 
         Método central para realizar requisições HTTP com o método especificado (GET, POST,
         etc.), incluindo parâmetros de consulta e cabeçalhos personalizados. Adiciona
@@ -44,11 +47,6 @@ class APIClient:
 
         Returns:
             Dict[str, Any]: Resposta da API parseada como dicionário JSON.
-
-        Raises:
-            ValueError: Se o método HTTP ou endpoint forem inválidos (ex.: string vazia).
-            Exception: Para erros de conexão (ex.: servidor inacessível) ou respostas HTTP
-                inválidas (ex.: 404, 401). Inclui detalhes do erro (status e mensagem).
 
         Example:
             >>> client = APIClient('https://api.pandascore.co', 'sua-chave')
