@@ -54,8 +54,6 @@ class CallbacksHandler:
             Returns:
                 None
             """
-            # Animação de carregamento
-            await self.bot.send_chat_action(chat_id=call.message.chat.id, action='typing')
             
             match(call.data):
                 case "menu_ultimaPartida":

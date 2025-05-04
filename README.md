@@ -2,9 +2,7 @@
 ![FURIA CS BOT Logo](https://arena.rtp.pt/wp-content/uploads/2021/01/furiagg_wallpaper_raian-860x507-1.jpg)
 
 ## Demonstração
-
-![Demonstração do BOT](./assets/demo.gif)
-
+[Assista ao vídeo](https://youtu.be/x7IyvGeUCUo)
 
 ## Linguagens Utilizadas
 - **Python**: Utilizado para toda a lógica do bot e integração com APIs.
